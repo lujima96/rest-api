@@ -20,8 +20,7 @@ This project is a Spring Boot-based REST API for a Pet Store application. It was
 
 ## Project Structure
 
-```
-pet-store/
+```pet-store/
 ├── src/
 │   ├── main/
 │   │   ├── java/
@@ -123,7 +122,4 @@ This project demonstrates the foundational steps for building a RESTful API usin
 
 Feel free to open an issue or contribute via pull requests for any improvements or suggestions!
 
----
-
-Happy coding! 😊
 
