@@ -122,4 +122,6 @@ This project demonstrates the foundational steps for building a RESTful API usin
 
 Feel free to open an issue or contribute via pull requests for any improvements or suggestions!
 
+Here is a youtube link to the video - https://www.youtube.com/watch?v=yqEiG6QeDsw
+
 
