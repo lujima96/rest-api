@@ -8,6 +8,7 @@ This project is a Spring Boot-based REST API for a Pet Store application. It was
 - **JPA Entity Creation:** Developed `Customer`, `Employee`, and `PetStore` classes with proper annotations and relationships.
 - **Spring Boot & JPA Configuration:** Configured the application to automatically generate MySQL database tables from our entity classes.
 - **Database Schema Generation:** Verified that the `customer`, `employee`, `pet_store`, and `pet_store_customer` tables are automatically created in the MySQL `pet_store` schema.
+- **REST Endpoints & Global Error Handling:** Implemented CRUD operations for creating and updating pet stores, along with a global error handler to return clear error messages.
 
 ## Technologies Used
 
@@ -20,16 +21,26 @@ This project is a Spring Boot-based REST API for a Pet Store application. It was
 
 ## Project Structure
 
-```pet-store/
+```bash
+pet-store/
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── pet/
 │   │   │       └── store/
+│   │   │           ├── controller/
+│   │   │           │   ├── error/
+│   │   │           │   │   └── GlobalErrorHandler.java
+│   │   │           │   └── model/
+│   │   │           │       └── PetStoreData.java
+│   │   │           ├── dao/
+│   │   │           │   └── PetStoreDao.java
 │   │   │           ├── entity/
 │   │   │           │   ├── Customer.java
 │   │   │           │   ├── Employee.java
 │   │   │           │   └── PetStore.java
+│   │   │           ├── service/
+│   │   │           │   └── PetStoreService.java
 │   │   │           └── PetStoreApplication.java
 │   │   └── resources/
 │   │       └── application.yaml
@@ -50,7 +61,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop  # Use 'update' if you don't want to drop the schema each time
+      ddl-auto: update  # Use 'update' to preserve schema between restarts
     show-sql: true
   sql:
     init:
@@ -73,6 +84,11 @@ spring:
 3. **Spring Boot Initialization:**  
    The `PetStoreApplication` class (annotated with `@SpringBootApplication`) bootstraps the application. On startup, Hibernate uses the JPA entity definitions to automatically generate the required tables in the MySQL schema.
 
+4. **REST API Endpoints:**  
+   - **Create Pet Store:** `POST /pet_store` – Accepts JSON data to create a new pet store.
+   - **Update Pet Store:** `PUT /pet_store/{petStoreId}` – Updates existing pet store details.
+   - **Global Error Handling:** If an operation fails (e.g., updating a non-existent pet store), the API returns a 404 Not Found error with a clear message.
+
 ## Running the Application
 
 ### Prerequisites
@@ -86,8 +102,8 @@ spring:
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/lujima96/MySQL-JAVA.git
-   cd MySQL-JAVA
+   git clone https://github.com/lujima96/rest-api.git
+   cd rest-api
    ```
 
 2. **Build the Project Using Maven:**
@@ -108,20 +124,18 @@ spring:
 ## Video Walkthrough
 
 For a detailed video demonstration of the project, check out the walkthrough here:  
-[YouTube Video](https://studio.youtube.com/video/yqEiG6QeDsw/edit)
+[YouTube Video](https://youtu.be/dJ0F3ouH1pY)
 
 ## Future Enhancements
 
-- **Implement REST Endpoints:** Add CRUD operations for managing customers, employees, and pet store data.
+- **Implement Additional REST Endpoints:** Expand CRUD operations for managing customers, employees, and further pet store functionalities.
 - **Data Seeding:** Use SQL scripts or a CommandLineRunner to insert sample data.
 - **Business Logic & Validations:** Enhance the application with additional business rules and validations.
+- **Security:** Add authentication and authorization for secure access to the API.
 
 ## Conclusion
 
 This project demonstrates the foundational steps for building a RESTful API using Spring Boot, JPA, and MySQL. It showcases automatic table generation through proper entity mapping and configuration, providing a solid base for further development.
 
 Feel free to open an issue or contribute via pull requests for any improvements or suggestions!
-
-Here is a youtube link to the video - https://www.youtube.com/watch?v=yqEiG6QeDsw
-
-
+```
