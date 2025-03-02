@@ -9,6 +9,7 @@ import java.util.Set;
 
 @Entity
 @Data
+
 public class Customer {
 	
     @Id

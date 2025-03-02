@@ -7,6 +7,7 @@ import lombok.ToString;
 
 @Entity
 @Data
+
 public class Employee {
 
     @Id
@@ -23,4 +24,6 @@ public class Employee {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private PetStore petStore;
+
+
 }
