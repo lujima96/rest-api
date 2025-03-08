@@ -1,72 +1,129 @@
 package pet.store.service;
 
-import java.util.NoSuchElementException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import pet.store.controller.model.PetStoreData;
+import pet.store.controller.model.PetStoreData.PetStoreEmployee;
+import pet.store.controller.model.PetStoreData.PetStoreCustomer;
+import pet.store.dao.CustomerDao;
+import pet.store.dao.EmployeeDao;
 import pet.store.dao.PetStoreDao;
+import pet.store.entity.Customer;
+import pet.store.entity.Employee;
 import pet.store.entity.PetStore;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
 @Service
-@Transactional
 public class PetStoreService {
-	
-@Autowired
-private PetStoreDao petStoreDao;
 
-/**
- * Saves or updates a PetStore using the provided DTO
- */
-
-//Finds or creates pet store
-
-public PetStoreData savePetStore(PetStoreData petStoreData) {
-    // 1) Find or create the PetStore
-    PetStore petStore = findOrCreatePetStore(petStoreData.getPetStoreId());
+    @Autowired
+    private EmployeeDao employeeDao;
     
-    // 2) Copy fields from DTO to entity
-    copyPetStoreFields(petStore, petStoreData);
+    @Autowired
+    private PetStoreDao petStoreDao;
     
-    // 3) Save the entity
-    petStore = petStoreDao.save(petStore);
+    @Autowired
+    private CustomerDao customerDao;
+
+    // Save or update a pet store
+    public PetStoreData savePetStore(PetStoreData petStoreData) {
+        PetStore petStore = convertToEntity(petStoreData);
+        PetStore savedPetStore = petStoreDao.save(petStore);
+        return new PetStoreData(savedPetStore);
+    }
     
-    // 4) Return a DTO that reflects what was saved
-    return new PetStoreData(petStore);
-}
+    // Helper: Convert PetStoreData DTO to PetStore entity
+    private PetStore convertToEntity(PetStoreData petStoreData) {
+        PetStore petStore = new PetStore();
+        petStore.setPetStoreId(petStoreData.getPetStoreId());
+        petStore.setPetStoreName(petStoreData.getPetStoreName());
+        petStore.setPetStoreAddress(petStoreData.getPetStoreAddress());
+        petStore.setPetStoreCity(petStoreData.getPetStoreCity());
+        petStore.setPetStoreState(petStoreData.getPetStoreState());
+        petStore.setPetStoreZip(petStoreData.getPetStoreZip());
+        petStore.setPetStorePhone(petStoreData.getPetStorePhone());
+        return petStore;
+    }
 
-private PetStore findOrCreatePetStore(Long petStoreId) {
-	// If petStoreId is null, create a new entity
-	if(petStoreId == null) {
-		return new PetStore();
-	}
-	// Othewise, look up PetStore in DB, throw if not found
-    return petStoreDao.findById(petStoreId)
-            .orElseThrow(() -> new NoSuchElementException(
-                "PetStore with ID=" + petStoreId + " was not found."));
-}
+    // Save or update an employee for the given pet store
+    @Transactional
+    public PetStoreEmployee saveEmployee(Long petStoreId, PetStoreEmployee employeeDto) {
+        PetStore petStore = petStoreDao.findById(petStoreId)
+                .orElseThrow(() -> new NoSuchElementException("Pet store not found with ID: " + petStoreId));
+        
+        Employee employee = (employeeDto.getEmployeeId() == null) 
+                ? new Employee() 
+                : employeeDao.findById(employeeDto.getEmployeeId()).orElse(new Employee());
 
-// This bad boy copies PetStore fields from the DTO to the entity
+        employee.setEmployeeFirstName(employeeDto.getEmployeeFirstName());
+        employee.setEmployeeLastName(employeeDto.getEmployeeLastName());
+        employee.setEmployeePhone(employeeDto.getEmployeePhone());
+        employee.setEmployeeJobTitle(employeeDto.getEmployeeJobTitle());
+        employee.setPetStore(petStore);
+        petStore.getEmployees().add(employee);
+        
+        Employee savedEmployee = employeeDao.save(employee);
+        return new PetStoreEmployee(savedEmployee);
+    }
 
-private void copyPetStoreFields(PetStore petStore, PetStoreData petStoreData) {
-	petStore.setPetStoreName(petStoreData.getPetStoreName());
-	petStore.setPetStorePhone(petStoreData.getPetStorePhone());
-	petStore.setPetStoreAddress(petStoreData.getPetStoreAddress());
-	petStore.setPetStoreCity(petStoreData.getPetStoreCity());
-	petStore.setPetStoreState(petStoreData.getPetStoreState());
-	petStore.setPetStoreZip(petStoreData.getPetStoreZip());
+    // Save or update a customer for the given pet store
+    @Transactional
+    public PetStoreCustomer saveCustomer(Long petStoreId, PetStoreCustomer customerDto) {
+        PetStore petStore = petStoreDao.findById(petStoreId)
+                .orElseThrow(() -> new NoSuchElementException("Pet store not found with ID: " + petStoreId));
+        
+        Customer customer = (customerDto.getCustomerId() == null)
+                ? new Customer()
+                : customerDao.findById(customerDto.getCustomerId()).orElse(new Customer());
+        
+        customer.setCustomerFirstName(customerDto.getCustomerFirstName());
+        customer.setCustomerLastName(customerDto.getCustomerLastName());
+        customer.setCustomerEmail(customerDto.getCustomerEmail());
+        
+        if (!customer.getPetStores().contains(petStore)) {
+            customer.getPetStores().add(petStore);
+        }
+        if (!petStore.getCustomers().contains(customer)) {
+            petStore.getCustomers().add(customer);
+        }
+        
+        Customer savedCustomer = customerDao.save(customer);
+        return new PetStoreCustomer(savedCustomer);
+    }
     
-    /*
-
+    // Retrieve all pet stores (summary view without customers and employees)
+    @Transactional(readOnly = true)
+    public List<PetStoreData> retrieveAllPetStores() {
+        List<PetStore> petStores = petStoreDao.findAll();
+        List<PetStoreData> summaries = petStores.stream()
+                .map(PetStoreData::new)
+                .collect(Collectors.toList());
+        // Clear customer and employee collections for summary view
+        summaries.forEach(summary -> {
+            summary.setCustomers(new HashSet<>());
+            summary.setEmployees(new HashSet<>());
+        });
+        return summaries;
+    }
     
-
-
-
-
-    private String petStoreZip;
-     */
-}
-
+    // Retrieve a pet store by its ID (includes customers and employees)
+    @Transactional(readOnly = true)
+    public PetStoreData retrievePetStoreById(Long petStoreId) {
+        PetStore petStore = petStoreDao.findById(petStoreId)
+                .orElseThrow(() -> new NoSuchElementException("Pet store not found with ID: " + petStoreId));
+        return new PetStoreData(petStore);
+    }
+    
+    // Delete a pet store by its ID
+    @Transactional
+    public void deletePetStoreById(Long petStoreId) {
+        PetStore petStore = petStoreDao.findById(petStoreId)
+                .orElseThrow(() -> new NoSuchElementException("Pet store not found with ID: " + petStoreId));
+        petStoreDao.delete(petStore);
+    }
 }

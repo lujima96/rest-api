@@ -90,5 +90,39 @@ public class PetStoreData {
             this.employeePhone = employee.getEmployeePhone();
             this.employeeJobTitle = employee.getEmployeeJobTitle();
         }
+
+		public void setName(Object name) {
+		    if (name instanceof String) {
+		        String fullName = (String) name;
+		        String[] parts = fullName.split(" ", 2);
+		        this.employeeFirstName = parts[0];
+		        this.employeeLastName = (parts.length > 1) ? parts[1] : "";
+		    } else {
+		        throw new IllegalArgumentException("Name must be a String");
+		    }
+			
+		}
+
+		public Object getName() {
+		    return employeeFirstName + " " + employeeLastName;
+		}
+
+		public Object getPosition() {
+			return employeeJobTitle;
+		}
+
+		public void setPosition(Object position) {
+		    if (position instanceof String) {
+		        String fullName = (String) position;
+		        String[] parts = fullName.split(" ", 2);
+		        this.employeeFirstName = parts[0];
+		        this.employeeLastName = (parts.length > 1) ? parts[1] : "";
+		    } else {
+		        throw new IllegalArgumentException("Name must be a String");
+		    }
+			
+		}
+
+
     }
 }
