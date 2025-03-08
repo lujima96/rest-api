@@ -196,7 +196,7 @@ The API exposes the following endpoints:
 ## Video Walkthrough
 
 For a detailed demonstration of the project, please see the walkthrough video here:  
-[YouTube Video](https://youtu.be/your_video_information_here)
+https://www.youtube.com/watch?v=zQm3aQJ_mDM
 
 ## Future Enhancements
 
@@ -212,7 +212,4 @@ This project demonstrates building a RESTful API with Spring Boot, JPA, and MySQ
 Feel free to contribute or open an issue if you have suggestions or improvements!
 
 ---
-
-Video URL:  
-[[https://youtu.be/your_video_information_here](https://studio.youtube.com/video/zQm3aQJ_mDM/edit)](https://www.youtube.com/watch?v=zQm3aQJ_mDM)
 ```
