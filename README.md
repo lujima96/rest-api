@@ -1,3 +1,5 @@
+
+
 ```markdown
 # Pet Store REST API
 
@@ -8,7 +10,7 @@ This project is a Spring Boot-based REST API for a Pet Store application. It was
 - **JPA Entity Creation:** Developed `Customer`, `Employee`, and `PetStore` classes with proper annotations and relationships.
 - **Spring Boot & JPA Configuration:** Configured the application to automatically generate MySQL database tables from our entity classes.
 - **Database Schema Generation:** Verified that the `customer`, `employee`, `pet_store`, and `pet_store_customer` tables are automatically created in the MySQL `pet_store` schema.
-- **REST Endpoints & Global Error Handling:** Implemented CRUD operations for creating and updating pet stores, along with a global error handler to return clear error messages.
+- **REST Endpoints & Global Error Handling:** Implemented CRUD operations for creating, updating, retrieving, and deleting pet stores, as well as endpoints to add employees and customers.
 
 ## Technologies Used
 
@@ -34,6 +36,8 @@ pet-store/
 │   │   │           │   └── model/
 │   │   │           │       └── PetStoreData.java
 │   │   │           ├── dao/
+│   │   │           │   ├── CustomerDao.java
+│   │   │           │   ├── EmployeeDao.java
 │   │   │           │   └── PetStoreDao.java
 │   │   │           ├── entity/
 │   │   │           │   ├── Customer.java
@@ -68,42 +72,100 @@ spring:
       mode: always
 ```
 
-> **Note:** Make sure to create the `pet_store` schema in your MySQL database and grant the appropriate permissions to the user.
+> **Note:** Ensure that the `pet_store` schema is created in your MySQL database and that the user has the appropriate permissions.
 
 ## How It Works
 
-1. **Entity Relationship Diagram (ERD):**  
-   The ERD defines the relationships between our entities:
-   - A **many-to-many** relationship between `Customer` and `PetStore` (using a join table `pet_store_customer`).
-   - A **one-to-many** relationship between `PetStore` and `Employee`.
-   - A **many-to-one** relationship between `Employee` and `PetStore`.
+### Entity Relationships
 
-2. **JPA Entities:**  
-   Each entity is annotated with `@Entity` and uses Lombok’s `@Data` for boilerplate code reduction. Recursive relationships are managed with `@EqualsAndHashCode.Exclude` and `@ToString.Exclude` to prevent infinite loops.
+- **PetStore Entity:**  
+  Represents a pet store with attributes such as name, address, and phone.  
+  - **One-to-Many Relationship:** Each pet store has many employees.
+  - **Many-to-Many Relationship:** Each pet store can be associated with many customers via a join table (`pet_store_customer`).
 
-3. **Spring Boot Initialization:**  
-   The `PetStoreApplication` class (annotated with `@SpringBootApplication`) bootstraps the application. On startup, Hibernate uses the JPA entity definitions to automatically generate the required tables in the MySQL schema.
+- **Employee & Customer Entities:**  
+  - **Employee:** Has a many-to-one relationship with a pet store.
+  - **Customer:** Maintains a many-to-many relationship with pet stores.
 
-4. **REST API Endpoints:**  
-   - **Create Pet Store:** `POST /pet_store` – Accepts JSON data to create a new pet store.
-   - **Update Pet Store:** `PUT /pet_store/{petStoreId}` – Updates existing pet store details.
-   - **Global Error Handling:** If an operation fails (e.g., updating a non-existent pet store), the API returns a 404 Not Found error with a clear message.
+### REST API Endpoints
+
+The API exposes the following endpoints:
+
+- **Create Pet Store:**  
+  - **Endpoint:** `POST /pet_store`  
+  - **Description:** Creates a new pet store.  
+  - **Sample JSON:**
+    ```json
+    {
+      "petStoreName": "Happy Pets",
+      "petStoreAddress": "123 Pet Lane",
+      "petStoreCity": "Petville",
+      "petStoreState": "CA",
+      "petStoreZip": "90001",
+      "petStorePhone": "123-456-7890",
+      "customers": [],
+      "employees": []
+    }
+    ```
+
+- **Update Pet Store:**  
+  - **Endpoint:** `PUT /pet_store/{petStoreId}`  
+  - **Description:** Updates an existing pet store identified by `{petStoreId}`.
+
+- **Retrieve Pet Store by ID:**  
+  - **Endpoint:** `GET /pet_store/{petStoreId}`  
+  - **Description:** Retrieves the complete pet store details (including customers and employees) for the specified `{petStoreId}`.
+
+- **List All Pet Stores (Summary):**  
+  - **Endpoint:** `GET /pet_store`  
+  - **Description:** Returns a summary list of all pet stores without customer and employee details.
+
+- **Add Pet Store Employee:**  
+  - **Endpoint:** `POST /pet_store/{petStoreId}/employee`  
+  - **Description:** Adds an employee to the pet store identified by `{petStoreId}`.  
+  - **Sample JSON:**
+    ```json
+    {
+      "employeeId": null,
+      "employeeFirstName": "Jane",
+      "employeeLastName": "Doe",
+      "employeePhone": "555-123-4567",
+      "employeeJobTitle": "Sales Associate"
+    }
+    ```
+
+- **Add Pet Store Customer:**  
+  - **Endpoint:** `POST /pet_store/{petStoreId}/customer`  
+  - **Description:** Adds a customer to the pet store identified by `{petStoreId}`.  
+  - **Sample JSON:**
+    ```json
+    {
+      "customerId": null,
+      "customerFirstName": "Alice",
+      "customerLastName": "Smith",
+      "customerEmail": "alice.smith@example.com"
+    }
+    ```
+
+- **Delete Pet Store:**  
+  - **Endpoint:** `DELETE /pet_store/{petStoreId}`  
+  - **Description:** Deletes the pet store specified by `{petStoreId}`. When deleted, all employees associated with that pet store and the join table records linking customers are also removed (without deleting the actual customer records).
 
 ## Running the Application
 
 ### Prerequisites
 
-- **Java 17** must be installed.
-- **MySQL** should be installed and running.
-- Create the `pet_store` schema and set up the user credentials as defined in `application.yaml`.
+- **Java 17** installed.
+- **MySQL** installed and running.
+- Create the `pet_store` schema in your MySQL database with proper user credentials as specified in `application.yaml`.
 
 ### Steps
 
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/lujima96/rest-api.git
-   cd rest-api
+   git clone https://github.com/your_github_user_name/repository_name_here.git
+   cd repository_name_here
    ```
 
 2. **Build the Project Using Maven:**
@@ -118,24 +180,39 @@ spring:
    mvn spring-boot:run
    ```
 
-4. **Verify the Schema:**
-   - Check your MySQL database (using DBeaver or MySQL Workbench) to see the tables `customer`, `employee`, `pet_store`, and `pet_store_customer` automatically created.
+4. **Test the Endpoints:**  
+   Use a REST client (like Postman or ARC) to interact with the API. For example:
+   - **Add an Employee:**  
+     `POST http://localhost:8080/pet_store/1/employee` with the sample JSON payload provided above.
+   - **Add a Customer:**  
+     `POST http://localhost:8080/pet_store/1/customer` with the sample JSON payload provided above.
+   - **List All Pet Stores:**  
+     `GET http://localhost:8080/pet_store`
+   - **Retrieve a Specific Pet Store:**  
+     `GET http://localhost:8080/pet_store/1`
+   - **Delete a Pet Store:**  
+     `DELETE http://localhost:8080/pet_store/1`
 
 ## Video Walkthrough
 
-For a detailed video demonstration of the project, check out the walkthrough here:  
-[YouTube Video](https://youtu.be/dJ0F3ouH1pY)
+For a detailed demonstration of the project, please see the walkthrough video here:  
+[YouTube Video](https://youtu.be/your_video_information_here)
 
 ## Future Enhancements
 
-- **Implement Additional REST Endpoints:** Expand CRUD operations for managing customers, employees, and further pet store functionalities.
-- **Data Seeding:** Use SQL scripts or a CommandLineRunner to insert sample data.
-- **Business Logic & Validations:** Enhance the application with additional business rules and validations.
-- **Security:** Add authentication and authorization for secure access to the API.
+- **Expand CRUD for Customers and Employees:** Additional endpoints for updating or retrieving individual customer/employee records.
+- **Data Seeding:** Implement a data seeder using SQL scripts or a `CommandLineRunner`.
+- **Enhanced Validations & Business Rules:** Add validations and more complex business logic.
+- **Security Enhancements:** Implement authentication and authorization.
 
 ## Conclusion
 
-This project demonstrates the foundational steps for building a RESTful API using Spring Boot, JPA, and MySQL. It showcases automatic table generation through proper entity mapping and configuration, providing a solid base for further development.
+This project demonstrates building a RESTful API with Spring Boot, JPA, and MySQL. It showcases the management of one-to-many and many-to-many relationships, automatic schema generation, and a complete set of CRUD operations for a pet store application.
 
-Feel free to open an issue or contribute via pull requests for any improvements or suggestions!
+Feel free to contribute or open an issue if you have suggestions or improvements!
+
+---
+
+Video URL:  
+[[https://youtu.be/your_video_information_here](https://studio.youtube.com/video/zQm3aQJ_mDM/edit)](https://www.youtube.com/watch?v=zQm3aQJ_mDM)
 ```
